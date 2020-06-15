@@ -13,7 +13,7 @@ import Plutus.SCB.Events.Contract (ContractInstanceId)
 import Plutus.SCB.Types (ContractExe)
 import Plutus.SCB.Webserver.Types (FullReport(..))
 import Prelude (($), (<$>), (<<<))
-import Types (EndpointForm, HAction(..), State(State), View(..), WebData, _crAvailableContracts, _csrDefinition, _utxoIndex)
+import Types (EndpointForm, HAction(..), State(..), View(..), WebData, _crAvailableContracts, _csrDefinition, _utxoIndex)
 import View.Blockchain (annotatedBlockchainPane)
 import View.Contracts (contractStatusesPane, installedContractsPane)
 import View.Events (eventsPane, utxoIndexPane)
@@ -23,7 +23,7 @@ render ::
   forall m slots.
   MonadAff m =>
   State -> ComponentHTML HAction slots m
-render (State { currentView, chainState, fullReport, contractSignatures }) =
+render (State { currentView, chainState, fullReport, contractSignatures, webSocketMessage }) =
   div
     [ class_ $ ClassName "main-frame" ]
     [ container_

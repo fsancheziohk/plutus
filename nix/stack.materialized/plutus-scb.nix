@@ -43,6 +43,7 @@
           (hsPkgs."QuickCheck" or (errorHandler.buildDepError "QuickCheck"))
           (hsPkgs."aeson" or (errorHandler.buildDepError "aeson"))
           (hsPkgs."aeson-pretty" or (errorHandler.buildDepError "aeson-pretty"))
+          (hsPkgs."async" or (errorHandler.buildDepError "async"))
           (hsPkgs."base" or (errorHandler.buildDepError "base"))
           (hsPkgs."bytestring" or (errorHandler.buildDepError "bytestring"))
           (hsPkgs."containers" or (errorHandler.buildDepError "containers"))
@@ -70,6 +71,7 @@
           (hsPkgs."servant" or (errorHandler.buildDepError "servant"))
           (hsPkgs."servant-client" or (errorHandler.buildDepError "servant-client"))
           (hsPkgs."servant-server" or (errorHandler.buildDepError "servant-server"))
+          (hsPkgs."servant-websockets" or (errorHandler.buildDepError "servant-websockets"))
           (hsPkgs."stm" or (errorHandler.buildDepError "stm"))
           (hsPkgs."text" or (errorHandler.buildDepError "text"))
           (hsPkgs."time-units" or (errorHandler.buildDepError "time-units"))
@@ -79,6 +81,7 @@
           (hsPkgs."uuid" or (errorHandler.buildDepError "uuid"))
           (hsPkgs."vector" or (errorHandler.buildDepError "vector"))
           (hsPkgs."warp" or (errorHandler.buildDepError "warp"))
+          (hsPkgs."websockets" or (errorHandler.buildDepError "websockets"))
           (hsPkgs."yaml" or (errorHandler.buildDepError "yaml"))
           (hsPkgs."mwc-random" or (errorHandler.buildDepError "mwc-random"))
           (hsPkgs."primitive" or (errorHandler.buildDepError "primitive"))
@@ -106,8 +109,10 @@
           "Cardano/Wallet/Mock"
           "Cardano/Wallet/Server"
           "Cardano/Wallet/Types"
+          "Control/Concurrent/Extra"
           "Control/Monad/Freer/Extra/Log"
           "Control/Monad/Freer/Extra/State"
+          "Control/Monad/Freer/WebSocket"
           "Control/Concurrent/Availability"
           "Data/Time/Units/Extra"
           "Plutus/SCB/App"
@@ -125,9 +130,11 @@
           "Plutus/SCB/Effects/EventLog"
           "Plutus/SCB/Effects/MultiAgent"
           "Plutus/SCB/Effects/UUID"
-          "Plutus/SCB/Webserver/Types"
           "Plutus/SCB/Webserver/API"
+          "Plutus/SCB/Webserver/Handler"
           "Plutus/SCB/Webserver/Server"
+          "Plutus/SCB/Webserver/Types"
+          "Plutus/SCB/Webserver/WebSocket"
           "Plutus/SCB/Events"
           "Plutus/SCB/Events/Contract"
           "Plutus/SCB/Events/Node"

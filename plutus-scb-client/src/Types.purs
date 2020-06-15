@@ -15,6 +15,7 @@ import Data.Newtype (class Newtype)
 import Data.NonEmpty ((:|))
 import Data.Symbol (SProxy(..))
 import Data.UUID as UUID
+import Foreign (MultipleErrors)
 import Language.Plutus.Contract.Effects.ExposeEndpoint (ActiveEndpoint, EndpointDescription)
 import Language.Plutus.Contract.Resumable (Request)
 import Ledger.Index (UtxoIndex)
@@ -22,16 +23,22 @@ import Ledger.Tx (Tx)
 import Ledger.TxId (TxId)
 import Network.RemoteData (RemoteData)
 import Playground.Types (FunctionSchema)
+import Plutus.SCB.Events (ChainEvent)
 import Plutus.SCB.Events.Contract (ContractInstanceId, ContractInstanceState, ContractSCBRequest, PartiallyDecodedResponse, _ContractInstanceState, _UserEndpointRequest)
 import Plutus.SCB.Types (ContractExe)
-import Plutus.SCB.Webserver.Types (ChainReport, ContractReport, ContractSignatureResponse, FullReport, _ChainReport, _ContractReport, _ContractSignatureResponse)
+import Plutus.SCB.Webserver.Types (ChainReport, ContractReport, ContractSignatureResponse, FullReport, StreamToClient, StreamToServer, _ChainReport, _ContractReport, _ContractSignatureResponse)
 import Schema (FormSchema)
 import Schema.Types (FormArgument, FormEvent)
 import Servant.PureScript.Ajax (AjaxError)
 import Test.QuickCheck (class Arbitrary)
 import Wallet.Rollup.Types (AnnotatedTx)
+import WebSocket.Support as WS
 
 data Query a
+  = ReceiveWebSocketMessage (WS.Output (StreamToClient ContractExe)) a
+
+data Output
+  = SendWebSocketMessage (WS.Input (StreamToServer ContractExe))
 
 type WebData
   = RemoteData AjaxError
@@ -51,6 +58,7 @@ newtype State
   , fullReport :: WebData (FullReport ContractExe)
   , chainState :: Chain.State
   , contractSignatures :: Map ContractInstanceId (WebData (Array EndpointForm))
+  , webSocketMessage :: RemoteData MultipleErrors (StreamToClient ContractExe)
   }
 
 type EndpointForm
@@ -74,6 +82,9 @@ _contractReport = _Newtype <<< prop (SProxy :: SProxy "contractReport")
 _chainReport :: forall t. Lens' (FullReport t) (ChainReport t)
 _chainReport = _Newtype <<< prop (SProxy :: SProxy "chainReport")
 
+_events :: forall t. Lens' (FullReport t) (Array (ChainEvent t))
+_events = _Newtype <<< prop (SProxy :: SProxy "events")
+
 _chainState :: Lens' State Chain.State
 _chainState = _Newtype <<< prop (SProxy :: SProxy "chainState")
 
@@ -85,6 +96,9 @@ _annotatedBlockchain = _ChainReport <<< prop (SProxy :: SProxy "annotatedBlockch
 
 _transactionMap :: forall t. Lens' (ChainReport t) (JsonMap TxId Tx)
 _transactionMap = _ChainReport <<< prop (SProxy :: SProxy "transactionMap")
+
+_webSocketMessage :: forall s a r. Newtype s { webSocketMessage :: a | r } => Lens' s a
+_webSocketMessage = _Newtype <<< prop (SProxy :: SProxy "webSocketMessage")
 
 _utxoIndex :: forall t. Lens' (ChainReport t) UtxoIndex
 _utxoIndex = _ChainReport <<< prop (SProxy :: SProxy "utxoIndex")

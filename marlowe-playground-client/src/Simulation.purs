@@ -114,7 +114,7 @@ handleQuery (ResetContract next) = do
   resetContract
   pure (Just next)
 
-handleQuery (WebsocketResponse response next) = do
+handleQuery (WebSocketResponse response next) = do
   assign _analysisState response
   pure (Just next)
 
@@ -294,9 +294,7 @@ handleAction _ AnalyseContract = do
       assign _analysisState Loading
   where
   checkContractForWarnings contract state = do
-    let
-      msgString = unsafeStringify <<< encode $ CheckForWarnings contract state
-    H.raise (WebsocketMessage msgString)
+    H.raise $ WebSocketMessage $ CheckForWarnings contract state
 
 checkAuthStatus :: forall m. MonadAff m => SPSettings_ SPParams_ -> HalogenM State Action ChildSlots Message m Unit
 checkAuthStatus settings = do

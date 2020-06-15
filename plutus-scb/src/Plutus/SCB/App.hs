@@ -30,6 +30,7 @@ import           Control.Monad.Freer
 import           Control.Monad.Freer.Error     (Error, handleError, runError, throwError)
 import           Control.Monad.Freer.Extra.Log (Log, logDebug, logInfo, runStderrLog, writeToLog)
 import           Control.Monad.Freer.Reader    (Reader, asks, runReader)
+import           Control.Monad.Freer.WebSocket (WebSocketEffect, handleWebSocket)
 import           Control.Monad.Freer.Writer    (Writer)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.IO.Unlift       (MonadUnliftIO)
@@ -86,10 +87,12 @@ type AppBackend m =
          , ChainIndexEffect
          , Error ClientError
          , EventLogEffect (ChainEvent ContractExe)
+         , WebSocketEffect
          , Error SCBError
          , Writer [Wallet.Emulator.Wallet.WalletEvent]
          , Log
          , Reader Connection
+         , Reader Config
          , Reader Env
          , m
          ]
@@ -100,16 +103,18 @@ runAppBackend ::
     , MonadLogger m
     , MonadUnliftIO m
     )
-    => Env
+    => Config -> Env
     -> Eff (AppBackend m) a
     -> m (Either SCBError a)
-runAppBackend e@Env{dbConnection, nodeClientEnv, walletClientEnv, signingProcessEnv, chainIndexEnv} =
+runAppBackend config e@Env{dbConnection, nodeClientEnv, walletClientEnv, signingProcessEnv, chainIndexEnv} =
     runM
     . runReader e
+    . runReader config
     . runReader dbConnection
     . runStderrLog
     . writeToLog
     . runError
+    . handleWebSocket
     . handleEventLogSql
     . handleChainIndex
     . handleContractEffectApp
@@ -149,21 +154,31 @@ runAppBackend e@Env{dbConnection, nodeClientEnv, walletClientEnv, signingProcess
 
 type App a = Eff (AppBackend (LoggingT IO)) a
 
-runApp :: LogLevel -> Config -> App a -> IO (Either SCBError a)
-runApp minLogLevel Config {dbConfig, nodeServerConfig, walletServerConfig, signingProcessConfig, chainIndexConfig} action =
-    runStdoutLoggingT $ filterLogger (\_ logLevel -> logLevel >= minLogLevel) $ do
-        walletClientEnv <- mkEnv (WalletServer.baseUrl walletServerConfig)
-        nodeClientEnv <- mkEnv (NodeServer.mscBaseUrl nodeServerConfig)
-        signingProcessEnv <- mkEnv (SigningProcess.spBaseUrl signingProcessConfig)
-        chainIndexEnv <- mkEnv (ChainIndex.ciBaseUrl chainIndexConfig)
-        dbConnection <- dbConnect dbConfig
-        let env = Env {..}
-        runAppBackend @(LoggingT IO) env action
+mkEnv :: (MonadUnliftIO m, MonadLogger m) => Config -> m Env
+mkEnv Config { dbConfig
+             , nodeServerConfig
+             , walletServerConfig
+             , signingProcessConfig
+             , chainIndexConfig
+             } = do
+    walletClientEnv <- clientEnv (WalletServer.baseUrl walletServerConfig)
+    nodeClientEnv <- clientEnv (NodeServer.mscBaseUrl nodeServerConfig)
+    signingProcessEnv <-
+        clientEnv (SigningProcess.spBaseUrl signingProcessConfig)
+    chainIndexEnv <- clientEnv (ChainIndex.ciBaseUrl chainIndexConfig)
+    dbConnection <- dbConnect dbConfig
+    pure Env {..}
   where
-    mkEnv baseUrl =
-            mkClientEnv
-                <$> liftIO (newManager defaultManagerSettings)
-                <*> pure baseUrl
+    clientEnv baseUrl =
+        mkClientEnv <$> liftIO (newManager defaultManagerSettings) <*>
+        pure baseUrl
+
+runApp :: LogLevel -> Config -> App a -> IO (Either SCBError a)
+runApp minLogLevel config action =
+    runStdoutLoggingT $
+    filterLogger (\_ logLevel -> logLevel >= minLogLevel) $ do
+        env <- mkEnv config
+        runAppBackend @(LoggingT IO) config env action
 
 handleContractEffectApp ::
        (Member Log effs, Member (Error SCBError) effs, LastMember m effs, MonadIO m)
