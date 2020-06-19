@@ -15,6 +15,7 @@ import           TestLib
 import           OptimizerSpec
 import           ParserSpec
 import           TransformSpec
+import           TypeSpec
 
 import           Language.PlutusCore.Pretty (PrettyConst)
 import           Language.PlutusCore.Quote
@@ -35,7 +36,6 @@ import           Control.Monad.Morph
 import           Control.Monad.Reader
 
 import           Data.Functor.Identity
-import           Text.Megaparsec.Pos
 
 main :: IO ()
 main = defaultMain $ runTestNestedIn ["test"] tests
@@ -44,9 +44,6 @@ instance ( PLC.GShow uni, PLC.GEq uni, PLC.DefaultUni PLC.<: uni
          , PLC.Closed uni, uni `PLC.Everywhere` PrettyConst, Typeable uni, Pretty a, Typeable a, Ord a
          ) => GetProgram (Term TyName Name uni a) uni where
     getProgram = asIfThrown . fmap (trivialProgram . void) . compileAndMaybeTypecheck True
-
-instance Pretty SourcePos where
-    pretty = pretty . sourcePosPretty
 
 -- | Adapt an computation that keeps its errors in an 'Except' into one that looks as if it caught them in 'IO'.
 asIfThrown
@@ -76,6 +73,8 @@ tests = testGroup "plutus-ir" <$> sequence
     , errors
     , optimizer
     , transform
+    , types
+    , typeErrors
     ]
 
 prettyprinting :: TestNested
@@ -89,7 +88,6 @@ lets :: TestNested
 lets = testNested "lets"
     [ goldenPlcFromPir term "letInLet"
     , goldenPlcFromPir term "letDep"
-    , goldenPlcFromPir term "rectypebind"
     ]
 
 datatypes :: TestNested
@@ -122,4 +120,5 @@ roundTripPirTerm = deserialise . serialise . void
 errors :: TestNested
 errors = testNested "errors"
     [ goldenPlcFromPirCatch term "mutuallyRecursiveTypes"
+    , goldenPlcFromPirCatch term "recursiveTypeBind"
     ]

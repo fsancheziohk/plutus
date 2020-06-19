@@ -24,6 +24,7 @@ library
         Language.PlutusIR.Compiler
         Language.PlutusIR.Compiler.Names
         Language.PlutusIR.Compiler.Definitions
+        Language.PlutusIR.Compiler.Error
         Language.PlutusIR.Generators.AST
         Language.PlutusIR.Parser
         Language.PlutusIR.MkPir
@@ -34,11 +35,11 @@ library
         Language.PlutusIR.Transform.Rename
         Language.PlutusIR.Transform.NonStrict
         Language.PlutusIR.Transform.LetFloat
+        Language.PlutusIR.TypeCheck
     hs-source-dirs: src
     other-modules:
         Language.PlutusIR.Analysis.Dependencies
         Language.PlutusIR.Analysis.Usages
-        Language.PlutusIR.Compiler.Error
         Language.PlutusIR.Compiler.Let
         Language.PlutusIR.Compiler.Datatype
         Language.PlutusIR.Compiler.Provenance
@@ -46,7 +47,6 @@ library
         Language.PlutusIR.Compiler.Types
         Language.PlutusIR.Compiler.Lower
         Language.PlutusIR.Normalize
-        Language.PlutusIR.TypeCheck
         Language.PlutusIR.TypeCheck.Internal
     default-language: Haskell2010
     default-extensions: ExplicitForAll ScopedTypeVariables
@@ -89,6 +89,7 @@ test-suite plutus-ir-test
         OptimizerSpec
         TransformSpec
         ParserSpec
+        TypeSpec
         TestLib
     default-language: Haskell2010
     build-depends:

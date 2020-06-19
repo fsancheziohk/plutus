@@ -435,7 +435,8 @@ inferTypeM (Let ann recurs bs inTerm) = do
             inferTypeM inTerm
     -- G !- inTerm :: *
     -- TODO: here is the problem of existential-type escaping
-    checkKindM ann (ann <$ unNormalized tyInTerm) $ Type ()
+    -- FIXME: reenable the check
+    -- checkKindM ann (ann <$ unNormalized tyInTerm) $ Type ()
     pure tyInTerm
 
 
@@ -552,6 +553,7 @@ checkWellformBind = \case
           vdecls)
       tvdecls
 
+-- TODO: -- note to self: this is only applied for LetRec bindings. Refactor
 checkWellformBinds :: forall uni ann.
                      (GShow uni, GEq uni, DefaultUni <: uni)
                     => NonEmpty (Binding TyName Name uni ann)
