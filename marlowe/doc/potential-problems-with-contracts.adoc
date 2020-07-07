@@ -88,15 +88,13 @@ For example:
 ----
     When [ Case (Choice choiceId [Bound 1 2])
                 (Pay accountId payee token
-                     (ChoiceValue choiceId value1)
+                     (ChoiceValue choiceId)
                      contract1)
          ]
          10
          contract2
 ----
-`value1` will never be evaluated. But in this case we don't have a choice but to write something in the default value of `ChoiceValue`
-
-In future versions of Marlowe, we may remove the default value for `ChoiceValue` and we may introduce a special `Value` construct for this kind of situation.
+But in this case we don't have a choice but to write something in the default value of `ChoiceValue`
 
 ===== Nested non-increasing timeouts
 
